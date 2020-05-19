@@ -37,5 +37,5 @@ lsMsg->sendOne($sms);
 $smsArray[] = new Sms('seance idelibre', '0601020304, 'Vous avez reçu une notification', 'libriciel');
 $smsArray[] = new Sms('seance idelibre', '0601020305, 'Vous avez reçu une notification', 'libriciel');
 $smsArray[] = new Sms('seance idelibre', '0601020306, 'Vous avez reçu une notification', 'libriciel');
-lsMsg->sendOne($sms);
+lsMsg->sendMultiple($smsArray);
 ```
