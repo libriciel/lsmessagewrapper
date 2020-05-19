@@ -1,0 +1,48 @@
+<?php
+
+namespace Libriciel\LsMessageWrapper\Test;
+
+
+use Libriciel\LsMessageWrapper\LsMessageWrapper;
+use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+
+class LsMessageWrapperTest extends TestCase
+{
+
+    public function testInfo()
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $factory = $this->createMock(RequestFactoryInterface::class);
+
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+        var_dump($msgWrapper); die;
+
+    }
+
+    public function testSendOne()
+    {
+
+    }
+
+    public function testSetApiKey()
+    {
+
+    }
+
+    public function testSetUrl()
+    {
+
+    }
+
+    public function testSendMultiple()
+    {
+
+    }
+
+    public function testSendPostRequest()
+    {
+
+    }
+}

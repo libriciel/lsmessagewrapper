@@ -1,0 +1,29 @@
+{
+    "name": "libriciel/ls-message-wrapper",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Rémi Dubourget"
+        }
+    ],
+    "require": {
+        "php": ">=7.2",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.4",
+        "mockery/mockery": "^1.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Libriciel\\LsMessageWrapper\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Libriciel\\LsMessageWrapper\\Test\\": "tests/"
+        }
+    }
+}
