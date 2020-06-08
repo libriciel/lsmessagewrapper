@@ -123,10 +123,10 @@ class LsMessageWrapper
 
         ];
         foreach ($smsArray as $sms) {
-            $data['messages'][] = ['message' => $sms->getContent(), 'phone' => $sms->getPhone()];
+            $data['messages'][] = ['content' => $sms->getContent(), 'phone' => $sms->getPhone()];
         }
 
-        return $this->sendPostRequest('api/v1/sendBulk', json_encode($data));
+        return $this->sendPostRequest('api/v1/send-bulk', json_encode($data));
     }
 
     /**
