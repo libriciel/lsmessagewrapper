@@ -41,6 +41,21 @@ class SmsTest extends TestCase
         new Sms("name", '0602030405', 'content', 'senderTooLong');
     }
 
+    public function testSenderWithSpecialCharacters()
+    {
+        $this->expectException(LsMessageException::class);
+        $this->expectExceptionCode(400);
+        $this->expectExceptionMessage('sender cannot have special characters');
+        new Sms("name", '0602030405', 'content', 'i-delibre');
+    }
+
+    public function testSenderAcceptAlphaNumeric()
+    {
+        $sms = new Sms("name", '0602030405', 'content', 'Ide12');
+        $this->assertSame('Ide12', $sms->getSender());
+    }
+
+
     public function testJsonSerialize()
     {
         $sms = new Sms("name", '0602030405', 'content', 'sender');

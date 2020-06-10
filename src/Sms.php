@@ -50,6 +50,10 @@ class Sms implements JsonSerializable
             throw new LsMessageException("sender must by < 11 characters", 400);
         }
 
+        if(!preg_match("/^[a-zA-Z1-9]+$/", $sender)){
+            throw new LsMessageException("sender cannot have special characters", 400);
+        }
+
         $this->name = $name;
         $this->phone = $phone;
         $this->content = $content;
