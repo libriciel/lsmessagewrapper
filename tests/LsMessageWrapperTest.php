@@ -134,7 +134,7 @@ class LsMessageWrapperTest extends TestCase
     {
         $factory = $this->mockRequestFactory();
 
-        $response = $this->mockResponse(401, 'bad apKey', $this->mockBody(""));
+        $response = $this->mockResponse(401, 'bad apKey', $this->mockBody("bad apKey"));
         $client = $this->mockClient($response);
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
