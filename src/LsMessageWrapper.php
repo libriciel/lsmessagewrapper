@@ -85,7 +85,7 @@ class LsMessageWrapper
             $response = $this->client->sendRequest($request);
 
             if ($response->getStatusCode() != 200) {
-                throw new LsMessageException($response->getReasonPhrase(), $response->getStatusCode());
+                throw new LsMessageException($response->getBody()->getContents(), $response->getStatusCode());
             }
             return json_decode($response->getBody()->getContents(), true);
         } catch (ClientExceptionInterface $e) {
@@ -149,7 +149,7 @@ class LsMessageWrapper
             $response = $this->client->sendRequest($request);
 
             if ($response->getStatusCode() !== 200) {
-                throw new LsMessageException($response->getReasonPhrase(), $response->getStatusCode());
+                throw new LsMessageException($response->getBody()->getContents(), $response->getStatusCode());
             }
 
             return json_decode($response->getBody()->getContents(), true);
