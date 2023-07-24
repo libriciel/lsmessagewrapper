@@ -3,17 +3,24 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Rémi Dubourget"
+            "name": "Rémi DUBOURGET",
+            "email": "remi.dubourget@libriciel.coop",
+            "role": "Project Manager"
+        },
+        {
+            "name": "Théo GUILLON",
+            "email": "theo.guillon@libriciel.coop",
+            "role": "Project Manager"
         }
     ],
     "require": {
-        "php": ">=7.2",
-        "psr/http-client": "^1.0",
-        "psr/http-factory": "^1.0",
+        "php": ">=7.4",
+        "psr/http-client": "^1.0.2",
+        "psr/http-factory": "^1.0.2",
         "ext-json": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "^8.4"
+        "phpunit/phpunit": "^10.2.6"
     },
     "autoload": {
         "psr-4": {

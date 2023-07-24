@@ -134,7 +134,7 @@ class LsMessageWrapperTest extends TestCase
     {
         $factory = $this->mockRequestFactory();
 
-        $response = $this->mockResponse(401, 'bad apKey', null);
+        $response = $this->mockResponse(401, 'bad apKey', $this->mockBody(""));
         $client = $this->mockClient($response);
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
@@ -205,7 +205,7 @@ class LsMessageWrapperTest extends TestCase
 
     public function testSendOneNotEnoughCredit()
     {
-        $response = $this->mockResponse(402, 'not enough credit');
+        $response = $this->mockResponse(402, 'not enough credit', $this->mockBody("not enough credit"));
         $client = $this->mockClient($response);
         $factory = $this->mockRequestFactory();
 
