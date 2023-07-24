@@ -3,6 +3,9 @@ stages:
   - test
   - quality
 
+variables:
+  CONTAINER_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}"
+
 build:
   stage: build
   tags:
