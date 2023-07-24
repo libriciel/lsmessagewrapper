@@ -26,6 +26,7 @@ unit_test:
   variables:
     XDEBUG_MODE: coverage
     GIT_STRATEGY: none
+    ENV: test
   script:
     - composer install
     - vendor/bin/phpunit --coverage-text --colors=never --coverage-clover coverage/coverage.xml --log-junit coverage/logfile.xml
