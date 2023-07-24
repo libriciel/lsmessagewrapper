@@ -28,6 +28,7 @@ unit_test:
     GIT_STRATEGY: none
     ENV: test
   script:
+    - cd /app
     - composer install
     - vendor/bin/phpunit --coverage-text --colors=never --coverage-clover coverage/coverage.xml --log-junit coverage/logfile.xml
   artifacts:
