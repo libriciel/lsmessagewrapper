@@ -4,7 +4,7 @@ Wrapper php de l'api de lsmessage.
 La lib vérifie aussi la validité du contenu avant l'envoi
 
 ### Prérequis
-php >= 7.2
+php >= 7.4
 
 ### Installation
 
