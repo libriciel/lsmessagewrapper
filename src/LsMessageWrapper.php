@@ -9,21 +9,9 @@ use Psr\Http\Message\RequestFactoryInterface;
 
 class LsMessageWrapper
 {
-    /**
-     * @var ClientInterface
-     */
-    private $client;
-    /**
-     * @var RequestFactoryInterface
-     */
-    private $requestFactory;
-    /**
-     * @var string
-     */
+    private ClientInterface $client;
+    private RequestFactoryInterface $requestFactory;
     private $url;
-    /**
-     * @var string
-     */
     private $apiKey;
 
     public function __construct(ClientInterface $client, RequestFactoryInterface $requestFactory)
@@ -33,10 +21,9 @@ class LsMessageWrapper
     }
 
     /**
-     * @param string $url
      * @throws LsMessageException
      */
-    public function setUrl(string $url)
+    public function setUrl(string $url): void
     {
         $httpRegex = "~^((https?)://).+$~";
         if (!preg_match($httpRegex, $url)) {
@@ -46,10 +33,9 @@ class LsMessageWrapper
     }
 
     /**
-     * @param string $apiKey
      * @throws LsMessageException
      */
-    public function setApiKey(string $apiKey)
+    public function setApiKey(string $apiKey): void
     {
         $noWhitespace = "~^^\S+$~";
 
@@ -62,15 +48,22 @@ class LsMessageWrapper
     /**
      * @throws LsMessageException
      */
-    private function isInit()
+    private function isInit(): void
     {
-        if (!$this->url || !$this->apiKey) {
+        if (!$this->url && !$this->apiKey) {
             throw new LsMessageException("url and apiKey must be set", 400);
+        }
+
+        if (!$this->url) {
+            throw new LsMessageException("url must be set", 400);
+        }
+
+        if (!$this->apiKey) {
+            throw new LsMessageException("apiKey must be set", 400);
         }
     }
 
     /**
-     * @return array
      * @throws LsMessageException
      */
     public function info(): array
@@ -94,8 +87,6 @@ class LsMessageWrapper
     }
 
     /**
-     * @param Sms $sms
-     * @return array
      * @throws LsMessageException
      */
     public function sendOne(Sms $sms): array
@@ -105,10 +96,8 @@ class LsMessageWrapper
     }
 
     /**
-     * @param Sms[] $smsArray
-     * @return array
-     * @throws LsMessageException
      * Send multiple message from the same sender
+     * @throws LsMessageException
      */
     public function sendMultiple(array $smsArray): array
     {
@@ -130,8 +119,6 @@ class LsMessageWrapper
     }
 
     /**
-     * @param string $path
-     * @param string $json
      * @return mixed
      * @throws LsMessageException
      */

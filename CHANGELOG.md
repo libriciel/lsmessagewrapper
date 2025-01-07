@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2025-01-07
+
+### Evolutions
+- Mise à jour de sécurité
+
+### Modifications
+- [Expéditeur] Modification des règles de validation. L’expéditeur doit être composé uniquement de caractères alphabétiques (lettres) ou alphanumériques (lettres et chiffres). Il ne doit contenir ni espaces ni caractères spéciaux.
+
 ## [1.1.1] - 2024-04-30
 
 ### Evolutions
