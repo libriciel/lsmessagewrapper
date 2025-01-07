@@ -12,25 +12,11 @@ class Sms implements JsonSerializable
     public const MAX_CHARACTERS_MESSAGE = 160;
     public const MIN_SENDER = 3;
     public const MAX_SENDER = 11;
+    public const REGEX_VALIDATION_SENDER = '/^[a-zA-Z0-9]+$/';
 
-    /**
-     * @var string
-     */
     private string $name;
-
-    /**
-     * @var string
-     */
     private string $phone;
-
-    /**
-     * @var string
-     */
     private string $content;
-
-    /**
-     * @var string
-     */
     private string $sender;
 
     /**
@@ -57,7 +43,7 @@ class Sms implements JsonSerializable
     private function checkName(?string $name): void
     {
         if (!$name) {
-            throw new LsMessageException("message must be not empty", 400);
+            throw new LsMessageException("name must be not empty", 400);
         }
 
         if (strlen($name) >= 255) {
@@ -67,7 +53,11 @@ class Sms implements JsonSerializable
 
     private function checkPhone(string $phone): void
     {
-        if (!isset($phone) || !$phone || !preg_match("/^0(6|7)\d{8}$/", $phone)) {
+        if (!isset($phone) || !$phone) {
+            throw new LsMessageException("phone must be not empty", 400);
+        }
+
+        if (!preg_match("/^0(6|7)\d{8}$/", $phone)) {
             throw new LsMessageException("phone must be 06XXXXXXXX or 07XXXXXXXX", 400);
         }
     }
@@ -89,15 +79,16 @@ class Sms implements JsonSerializable
             throw new LsMessageException("sender must be not empty", 400);
         }
 
-        if (preg_match('/[^\w\s]/', $sender)) {
-            throw new LsMessageException("sender cannot have special characters", 400);
+        if (!preg_match(SMS::REGEX_VALIDATION_SENDER, $sender)) {
+            throw new LsMessageException("sender cannot have special characters or space. Be composed only of alphabetic (letters) or alphanumeric (letters and numbers) characters.", 400);
         }
 
-        if (strlen($sender) < SMS::MIN_SENDER) {
+        $nbSender = strlen($sender);
+        if ($nbSender < SMS::MIN_SENDER) {
             throw new LsMessageException("sender must not be less than " . SMS::MIN_SENDER . " characters", 400);
         }
 
-        if (strlen($sender) > SMS::MAX_SENDER) {
+        if ($nbSender > SMS::MAX_SENDER) {
             throw new LsMessageException("sender must be not exceed " . SMS::MAX_SENDER . " characters", 400);
         }
     }
@@ -107,33 +98,21 @@ class Sms implements JsonSerializable
         return get_object_vars($this);
     }
 
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return string
-     */
     public function getPhone(): string
     {
         return $this->phone;
     }
 
-    /**
-     * @return string
-     */
     public function getContent(): string
     {
         return $this->content;
     }
 
-    /**
-     * @return string
-     */
     public function getSender(): string
     {
         return $this->sender;
