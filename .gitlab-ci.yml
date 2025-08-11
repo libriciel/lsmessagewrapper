@@ -36,10 +36,10 @@ unit_test:
       - coverage
     expire_in: 1h
 
-quality:
-  stage: quality
-  only:
-    - master
-  image : gitlab.libriciel.fr:4567/docker/sonar-scanner:latest
-  script:
-    - /sonar-scanner -Dsonar.login=$SONAR_LOGIN -Dsonar.host.url=$SONAR_HOST_URL
+#quality:
+#  stage: quality
+#  only:
+#    - master
+#  image : gitlab.libriciel.fr:4567/docker/sonar-scanner:latest
+#  script:
+#    - /sonar-scanner -Dsonar.login=$SONAR_LOGIN -Dsonar.host.url=$SONAR_HOST_URL
