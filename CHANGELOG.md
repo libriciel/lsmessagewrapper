@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2025-XX-XX
+
+### Evolutions
+- Mise à jour de sécurité
+
+### Corrections
+- Correction du calcul du nombre de caractères en fonction de l'encodage GSM.
+
 ## [1.1.2] - 2025-01-07
 
 ### Evolutions
