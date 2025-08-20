@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Libriciel\LsMessageWrapper;
 
 use Psr\Http\Client\ClientExceptionInterface;
@@ -143,5 +142,47 @@ class LsMessageWrapper
         } catch (ClientExceptionInterface $e) {
             throw new LsMessageException($e->getMessage(), $e->getCode());
         }
+    }
+
+    public static function countGsmCharacters(string $text): int
+    {
+        $gsmBasic = '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ`abcdefghijklmnopqrstuvwxyzäöñüà';
+        $gsmExtended = '^{}\\[~]|€';
+
+        $replacement = [
+            '’' => "'",  // apostrophe typographique → apostrophe GSM
+            '“' => '"',
+            '”' => '"',
+            '–' => '-', // tiret demi-cadratin
+            '—' => '-', // tiret cadratin
+        ];
+
+        $count = 0;
+        $length = mb_strlen($text, 'UTF-8');
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = mb_substr($text, $i, 1, 'UTF-8');
+
+            if (strpos($gsmBasic, $char) !== false) {
+                $count += 1;
+            } elseif (strpos($gsmExtended, $char) !== false) {
+                $count += 2;
+            } else {
+                $char = $replacement[$char] ?? '';
+
+                if ($char === '') {
+                    continue;
+                }
+
+                // Réévaluer le caractère nettoyé
+                if (strpos($gsmBasic, $char) !== false) {
+                    $count += 1;
+                } elseif (strpos($gsmExtended, $char) !== false) {
+                    $count += 2;
+                }
+            }
+        }
+
+        return $count;
     }
 }

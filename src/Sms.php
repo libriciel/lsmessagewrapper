@@ -1,11 +1,8 @@
 <?php
 
-
 namespace Libriciel\LsMessageWrapper;
 
-use App\Service\SmsException;
 use JsonSerializable;
-use Symfony\Component\HttpFoundation\Response;
 
 class Sms implements JsonSerializable
 {
@@ -68,7 +65,7 @@ class Sms implements JsonSerializable
             throw new LsMessageException("message must be not empty", 400);
         }
 
-        $nbContent = $this->countGsmCharacters($content);
+        $nbContent = LsMessageWrapper::countGsmCharacters($content);
 
         if ($nbContent >= SMS::MAX_CHARACTERS_MESSAGE) {
             throw new LsMessageException("message must be not exceed " . SMS::MAX_CHARACTERS_MESSAGE . " characters", 400);
@@ -93,48 +90,6 @@ class Sms implements JsonSerializable
         if ($nbSender > SMS::MAX_SENDER) {
             throw new LsMessageException("sender must be not exceed " . SMS::MAX_SENDER . " characters", 400);
         }
-    }
-
-    public function countGsmCharacters(string $text): int
-    {
-        $gsmBasic = '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ`abcdefghijklmnopqrstuvwxyzäöñüà';
-        $gsmExtended = '^{}\\[~]|€';
-
-        $replacement = [
-            '’' => "'",  // apostrophe typographique → apostrophe GSM
-            '“' => '"',
-            '”' => '"',
-            '–' => '-', // tiret demi-cadratin
-            '—' => '-', // tiret cadratin
-        ];
-
-        $count = 0;
-        $length = mb_strlen($text, 'UTF-8');
-
-        for ($i = 0; $i < $length; $i++) {
-            $char = mb_substr($text, $i, 1, 'UTF-8');
-
-            if (strpos($gsmBasic, $char) !== false) {
-                $count += 1;
-            } elseif (strpos($gsmExtended, $char) !== false) {
-                $count += 2;
-            } else {
-                $char = $replacement[$char] ?? '';
-
-                if ($char === '') {
-                    continue;
-                }
-
-                // Réévaluer le caractère nettoyé
-                if (strpos($gsmBasic, $char) !== false) {
-                    $count += 1;
-                } elseif (strpos($gsmExtended, $char) !== false) {
-                    $count += 2;
-                }
-            }
-        }
-
-        return $count;
     }
 
     public function jsonSerialize()
