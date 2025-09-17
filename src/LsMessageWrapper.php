@@ -146,41 +146,21 @@ class LsMessageWrapper
 
     public static function countGsmCharacters(string $text): int
     {
-        $gsmBasic = '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ`abcdefghijklmnopqrstuvwxyzäöñüà';
-        $gsmExtended = '^{}\\[~]|€';
+        // Tableau de remplacements
+        $replacement = Sms::REMPLACEMENTS_CARACTERES;
 
-        $replacement = [
-            '’' => "'",  // apostrophe typographique → apostrophe GSM
-            '“' => '"',
-            '”' => '"',
-            '–' => '-', // tiret demi-cadratin
-            '—' => '-', // tiret cadratin
-        ];
+        // Caractères qui comptent double
+        $doubleChars = ['€', '~', '{', '}', '[', ']'];
+
+        // Remplacement des caractères
+        $normalized = strtr($text, $replacement);
 
         $count = 0;
-        $length = mb_strlen($text, 'UTF-8');
-
+        // Comptage GSM
+        $length = mb_strlen($normalized, 'UTF-8');
         for ($i = 0; $i < $length; $i++) {
-            $char = mb_substr($text, $i, 1, 'UTF-8');
-
-            if (strpos($gsmBasic, $char) !== false) {
-                $count += 1;
-            } elseif (strpos($gsmExtended, $char) !== false) {
-                $count += 2;
-            } else {
-                $char = $replacement[$char] ?? '';
-
-                if ($char === '') {
-                    continue;
-                }
-
-                // Réévaluer le caractère nettoyé
-                if (strpos($gsmBasic, $char) !== false) {
-                    $count += 1;
-                } elseif (strpos($gsmExtended, $char) !== false) {
-                    $count += 2;
-                }
-            }
+            $char = mb_substr($normalized, $i, 1, 'UTF-8');
+            $count += in_array($char, $doubleChars, true) ? 2 : 1;
         }
 
         return $count;

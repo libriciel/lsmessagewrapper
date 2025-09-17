@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.4] - 2025-XX-XX
+
+### Evolutions
+- Mise en place de la constante "REMPLACEMENTS_CARACTERES" qui permet de connaître tous les caractères qui sont remplacés.
+
+### Corrections
+- Correction du calcul du nombre de caractères en fonction de l'encodage GSM.
+
+### Suppressions
+- Suppression de la validation du numéro de téléphone.
+
 ## [1.1.3] - 2025-08-20
 
 ### Evolutions
