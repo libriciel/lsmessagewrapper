@@ -10,6 +10,56 @@ class Sms implements JsonSerializable
     public const MIN_SENDER = 3;
     public const MAX_SENDER = 11;
     public const REGEX_VALIDATION_SENDER = '/^[a-zA-Z0-9]+$/';
+    public const REMPLACEMENTS_CARACTERES = [
+        'ÿ' => 'y',
+        'y' => 'y',
+        'ç' => 'c',
+        'Ç' => 'C',
+        'û' => 'u',
+        'u' => 'u',
+        'ü' => 'u',
+        'ï' => 'i',
+        'ô' => 'o',
+        'ö' => 'o',
+        'ó' => 'o',
+        'î' => 'i',
+        'ë' => 'e',
+        'ê' => 'e',
+        '[' => '(',
+        ']' => ')',
+        '{' => '(',
+        '}' => ')',
+        '`' => '‘',
+        '‘' => '‘',
+        'µ' => 'u',
+        'Ä' => 'A',
+        'À' => 'A',
+        'Á' => 'A',
+        'Â' => 'A',
+        'Ã' => 'A',
+        'È' => 'E',
+        'Ê' => 'E',
+        'Ë' => 'E',
+        'Ü' => 'U',
+        'Ù' => 'U',
+        'Ú' => 'U',
+        'Û' => 'U',
+        'Ý' => 'Y',
+        'ä' => 'a',
+        'á' => 'a',
+        'â' => 'a',
+        'ã' => 'a',
+        'Ö' => 'O',
+        'Ô' => 'O',
+        'œ' => 'oe',
+        '^' => '',
+        '~' => '',
+        '|' => '',
+        '\\' => '',
+        '¨' => '',
+        '°' => '.',
+        '“' => '‘'
+    ];
 
     private string $name;
     private string $phone;
@@ -27,7 +77,6 @@ class Sms implements JsonSerializable
     public function __construct(string $name, string $phone, string $content, string $sender)
     {
         $this->checkName($name);
-        $this->checkPhone($phone);
         $this->checkContent($content);
         $this->checkSender($sender);
 
@@ -39,56 +88,44 @@ class Sms implements JsonSerializable
 
     private function checkName(?string $name): void
     {
-        if (!$name) {
-            throw new LsMessageException("name must be not empty", 400);
+        if (empty($name)) {
+            throw new LsMessageException("Le nom ne doit pas être vide.", 400);
         }
 
         if (strlen($name) >= 255) {
-            throw new LsMessageException("max name length must be not exceed 255 characters", 400);
-        }
-    }
-
-    private function checkPhone(?string $phone): void
-    {
-        if (!isset($phone) || !$phone) {
-            throw new LsMessageException("phone must be not empty", 400);
-        }
-
-        if (!preg_match("/^0(6|7)\d{8}$/", $phone)) {
-            throw new LsMessageException("phone must be 06XXXXXXXX or 07XXXXXXXX", 400);
+            throw new LsMessageException("La longueur maximale du nom doit être inférieure à 255.", 400);
         }
     }
 
     private function checkContent(?string $content): void
     {
         if (!isset($content) || !$content) {
-            throw new LsMessageException("message must be not empty", 400);
+            throw new LsMessageException("Le message ne doit pas être vide.",  400);
         }
 
         $nbContent = LsMessageWrapper::countGsmCharacters($content);
-
         if ($nbContent >= SMS::MAX_CHARACTERS_MESSAGE) {
-            throw new LsMessageException("message must be not exceed " . SMS::MAX_CHARACTERS_MESSAGE . " characters", 400);
+            throw new LsMessageException("Le message ne doit pas dépasser " . SMS::MAX_CHARACTERS_MESSAGE . " caractères.", 400);
         }
     }
 
     private function checkSender(?string $sender): void
     {
         if (empty($sender)) {
-            throw new LsMessageException("sender must be not empty", 400);
+            throw new LsMessageException("L’expéditeur ne doit pas être vide.", 400);
         }
 
         if (!preg_match(SMS::REGEX_VALIDATION_SENDER, $sender)) {
-            throw new LsMessageException("sender cannot have special characters or space. Be composed only of alphabetic (letters) or alphanumeric (letters and numbers) characters.", 400);
+            throw new LsMessageException("L’expéditeur ne peut pas contenir de caractères spéciaux ni d’espace. Il doit être composé uniquement de lettres ou de caractères alphanumériques (lettres et chiffres).", 400);
         }
 
         $nbSender = strlen($sender);
         if ($nbSender < SMS::MIN_SENDER) {
-            throw new LsMessageException("sender must not be less than " . SMS::MIN_SENDER . " characters", 400);
+            throw new LsMessageException("L’expéditeur ne doit pas être inférieur à " . SMS::MIN_SENDER . " caractères.", 400);
         }
 
         if ($nbSender > SMS::MAX_SENDER) {
-            throw new LsMessageException("sender must be not exceed " . SMS::MAX_SENDER . " characters", 400);
+            throw new LsMessageException("L’expéditeur ne doit pas dépasser " . SMS::MAX_SENDER . " caractères.", 400);
         }
     }
 
