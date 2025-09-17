@@ -1,9 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.1.4] - 2025-XX-XX
+## [1.1.4] - 2025-09-17
 
 ### Evolutions
+- Mise à jour de sécurité
 - Mise en place de la constante "REMPLACEMENTS_CARACTERES" qui permet de connaître tous les caractères qui sont remplacés.
 
 ### Corrections
