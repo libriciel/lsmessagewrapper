@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.1.5] - 2025-XX-XX
+## [1.1.5] - 2025-10-06
 
 ### Evolutions
 - Mise à jour de sécurité
