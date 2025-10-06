@@ -150,7 +150,7 @@ class LsMessageWrapper
         $replacement = Sms::REMPLACEMENTS_CARACTERES;
 
         // Caractères qui comptent double
-        $doubleChars = ['€', '~', '{', '}', '[', ']'];
+        $doubleChars = ['€', "\n"];
 
         // Remplacement des caractères
         $normalized = strtr($text, $replacement);
