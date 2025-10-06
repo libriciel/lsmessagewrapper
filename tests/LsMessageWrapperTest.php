@@ -285,4 +285,72 @@ class LsMessageWrapperTest extends TestCase
 
         $msgWrapper->sendMultiple([]);
     }
+
+    public function testCountGsmCharactersSimpleText(): void
+    {
+        $response = $this->mockResponse(200, '', $this->mockBody('{"success":true}'));
+        $client = $this->mockClient($response);
+        $factory = $this->mockRequestFactory();
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+
+        $text = 'Bonjour';
+        $count = $msgWrapper->countGsmCharacters($text);
+
+        $this->assertSame(7, $count);
+    }
+
+    public function testCountGsmCharactersWithAccents(): void
+    {
+        $response = $this->mockResponse(200, '', $this->mockBody('{"success":true}'));
+        $client = $this->mockClient($response);
+        $factory = $this->mockRequestFactory();
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+
+        // Supposons que 'é' soit remplacé par 'e' dans REMPLACEMENTS_CARACTERES
+        // Exemple : ['é' => 'e', 'è' => 'e']
+        $text = 'Café';
+        $count = $msgWrapper->countGsmCharacters($text);
+
+        $this->assertSame(4, $count);
+    }
+
+    public function testCountGsmCharactersWithDoubleCharacters(): void
+    {
+        $response = $this->mockResponse(200, '', $this->mockBody('{"success":true}'));
+        $client = $this->mockClient($response);
+        $factory = $this->mockRequestFactory();
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+
+        $text = "Salut €\n";
+        // "Salut" = 5 caractères + " " = 1 + "€" = 2 + "\n" = 2
+
+        $count = $msgWrapper->countGsmCharacters($text);
+
+        $this->assertSame(10, $count);
+    }
+
+    public function testCountGsmCharactersEmptyString(): void
+    {
+        $response = $this->mockResponse(200, '', $this->mockBody('{"success":true}'));
+        $client = $this->mockClient($response);
+        $factory = $this->mockRequestFactory();
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+
+        $count = $msgWrapper->countGsmCharacters('');
+
+        $this->assertSame(0, $count);
+    }
+
+    public function testCountGsmCharactersWithReplacementTable(): void
+    {
+        $response = $this->mockResponse(200, '', $this->mockBody('{"success":true}'));
+        $client = $this->mockClient($response);
+        $factory = $this->mockRequestFactory();
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+
+        $count = $msgWrapper->countGsmCharacters('ça va');
+
+        // "ça va" devient "ca va" → 5 caractères
+        $this->assertSame(5, $count);
+    }
 }
