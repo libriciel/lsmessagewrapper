@@ -146,6 +146,9 @@ class LsMessageWrapper
 
     public static function countGsmCharacters(string $text): int
     {
+        // Normalisation des fins de ligne
+        $text = preg_replace("/\r\n?/", "\n", $text);
+
         // Tableau de remplacements
         $replacement = Sms::REMPLACEMENTS_CARACTERES;
 
@@ -156,8 +159,8 @@ class LsMessageWrapper
         $normalized = strtr($text, $replacement);
 
         $count = 0;
-        // Comptage GSM
         $length = mb_strlen($normalized, 'UTF-8');
+
         for ($i = 0; $i < $length; $i++) {
             $char = mb_substr($normalized, $i, 1, 'UTF-8');
             $count += in_array($char, $doubleChars, true) ? 2 : 1;
