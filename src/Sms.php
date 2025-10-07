@@ -12,11 +12,9 @@ class Sms implements JsonSerializable
     public const REGEX_VALIDATION_SENDER = '/^[a-zA-Z0-9]+$/';
     public const REMPLACEMENTS_CARACTERES = [
         'ÿ' => 'y',
-        'y' => 'y',
         'ç' => 'c',
         'Ç' => 'C',
         'û' => 'u',
-        'u' => 'u',
         'ü' => 'u',
         'ï' => 'i',
         'ô' => 'o',
@@ -29,8 +27,8 @@ class Sms implements JsonSerializable
         ']' => ')',
         '{' => '(',
         '}' => ')',
-        '`' => '‘',
-        '‘' => '‘',
+        '`' => "'",
+        '‘' => "'",
         'µ' => 'u',
         'Ä' => 'A',
         'À' => 'A',
@@ -58,7 +56,7 @@ class Sms implements JsonSerializable
         '\\' => '',
         '¨' => '',
         '°' => '.',
-        '“' => '‘'
+        '“' => "'",
     ];
 
     private string $name;

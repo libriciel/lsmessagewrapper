@@ -1,13 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.1.5] - 2025-10-06
+## [1.1.5] - 2025-XX-XX
 
 ### Evolutions
 - Mise à jour de sécurité
 
 ### Modifications
-- Calcul du nombre de caractères suite au correctif du prestataire..
+- Calcul du nombre de caractères suite au correctif du prestataire.
+- Modification des caractères remplacés suite au correctif du prestataire.
 
 ## [1.1.4] - 2025-09-17
 
