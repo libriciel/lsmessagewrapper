@@ -1,6 +1,0 @@
-services:
-  fpm-lsmessage-wrapper:
-    container_name: fpm-lsmessage-wrapper
-    build: .
-    volumes:
-      - ./:/app

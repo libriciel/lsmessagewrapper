@@ -1,22 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Libriciel\LsMessageWrapper;
 
+use JsonException;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 
 class LsMessageWrapper
 {
-    private ClientInterface $client;
-    private RequestFactoryInterface $requestFactory;
-    private $url;
-    private $apiKey;
+    private ?string $url = null;
+    private ?string $apiKey = null;
 
-    public function __construct(ClientInterface $client, RequestFactoryInterface $requestFactory)
-    {
-        $this->client = $client;
-        $this->requestFactory = $requestFactory;
+    public function __construct(
+        private readonly ClientInterface $client,
+        private readonly RequestFactoryInterface $requestFactory,
+    ) {
     }
 
     /**
@@ -24,9 +25,11 @@ class LsMessageWrapper
      */
     public function setUrl(string $url): void
     {
-        $httpRegex = "~^((https?)://).+$~";
+        $url = rtrim($url, '/');
+
+        $httpRegex = '~^https://.+\z~';
         if (!preg_match($httpRegex, $url)) {
-            throw new LsMessageException("malformed url : missing http|https", 400);
+            throw new LsMessageException('malformed url : https required', 400);
         }
         $this->url = $url;
     }
@@ -36,10 +39,10 @@ class LsMessageWrapper
      */
     public function setApiKey(string $apiKey): void
     {
-        $noWhitespace = "~^^\S+$~";
+        $noWhitespace = '~^\S+\z~';
 
         if (!preg_match($noWhitespace, $apiKey)) {
-            throw new LsMessageException("malformed apiKey : no whitespace allowed", 400);
+            throw new LsMessageException('malformed apiKey : no whitespace allowed', 400);
         }
         $this->apiKey = $apiKey;
     }
@@ -50,104 +53,106 @@ class LsMessageWrapper
     private function isInit(): void
     {
         if (!$this->url && !$this->apiKey) {
-            throw new LsMessageException("url and apiKey must be set", 400);
+            throw new LsMessageException('url and apiKey must be set', 400);
         }
 
         if (!$this->url) {
-            throw new LsMessageException("url must be set", 400);
+            throw new LsMessageException('url must be set', 400);
         }
 
         if (!$this->apiKey) {
-            throw new LsMessageException("apiKey must be set", 400);
+            throw new LsMessageException('apiKey must be set', 400);
         }
     }
 
     /**
+     * @return array<mixed>
      * @throws LsMessageException
      */
     public function info(): array
     {
-        $this->isInit();
-        $request = $this->requestFactory->createRequest(
-            "GET",
-            "$this->url" . '/api/v1/info'
-        )->withHeader('Authorization', 'Bearer ' . $this->apiKey);
-
-        try {
-            $response = $this->client->sendRequest($request);
-
-            if ($response->getStatusCode() != 200) {
-                throw new LsMessageException($response->getBody()->getContents(), $response->getStatusCode());
-            }
-            return json_decode($response->getBody()->getContents(), true);
-        } catch (ClientExceptionInterface $e) {
-            throw new LsMessageException($e->getMessage(), $e->getCode());
-        }
+        return $this->sendRequest('GET', 'api/v1/info');
     }
 
     /**
+     * @return array<mixed>
      * @throws LsMessageException
      */
     public function sendOne(Sms $sms): array
     {
-        $this->isInit();
-        return $this->sendPostRequest('api/v1/send', json_encode($sms));
+        return $this->sendRequest('POST', 'api/v1/send', $sms);
     }
 
     /**
      * Send multiple message from the same sender
+     * @param list<Sms> $smsArray
+     * @return array<mixed>
      * @throws LsMessageException
      */
     public function sendMultiple(array $smsArray): array
     {
         $this->isInit();
         if (!count($smsArray)) {
-            throw new LsMessageException("empty sms array", 400);
+            throw new LsMessageException('empty sms array', 400);
         }
         $data = [
             'name' => $smsArray[0]->getName(),
             'sender' => $smsArray[0]->getSender(),
-            'messages' => []
-
+            'messages' => [],
         ];
         foreach ($smsArray as $sms) {
             $data['messages'][] = ['content' => $sms->getContent(), 'phone' => $sms->getPhone()];
         }
 
-        return $this->sendPostRequest('api/v1/send-bulk', json_encode($data));
+        return $this->sendRequest('POST', 'api/v1/send-bulk', $data);
     }
 
     /**
-     * @return mixed
+     * @return array<mixed>
      * @throws LsMessageException
      */
-    private function sendPostRequest(string $path, string $json)
+    private function sendRequest(string $method, string $path, mixed $body = null): array
     {
-        $request = $this->requestFactory->createRequest(
-            "POST",
-            $this->url . '/' . $path
-        )->withHeader('Authorization', 'Bearer ' . $this->apiKey)
-            ->withHeader('Content-Type', 'application/json');
+        $this->isInit();
+        $request = $this->requestFactory->createRequest($method, $this->url . '/' . $path)
+            ->withHeader('Authorization', 'Bearer ' . $this->apiKey);
 
-        $request->getBody()->write($json);
+        if ($body !== null) {
+            $request = $request->withHeader('Content-Type', 'application/json');
+            try {
+                $request->getBody()->write(json_encode($body, JSON_THROW_ON_ERROR));
+            } catch (JsonException $e) {
+                throw new LsMessageException('unable to encode request body : ' . $e->getMessage(), 400, $e);
+            }
+        }
 
         try {
             $response = $this->client->sendRequest($request);
-
-            if ($response->getStatusCode() !== 200) {
-                throw new LsMessageException($response->getBody()->getContents(), $response->getStatusCode());
-            }
-
-            return json_decode($response->getBody()->getContents(), true);
         } catch (ClientExceptionInterface $e) {
-            throw new LsMessageException($e->getMessage(), $e->getCode());
+            throw new LsMessageException($e->getMessage(), $e->getCode(), $e);
         }
+
+        $content = $response->getBody()->getContents();
+        if ($response->getStatusCode() !== 200) {
+            throw new LsMessageException($content, $response->getStatusCode());
+        }
+
+        try {
+            $data = json_decode($content, true, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new LsMessageException('invalid response : ' . $e->getMessage(), 500, $e);
+        }
+        if (!is_array($data)) {
+            throw new LsMessageException('invalid response : JSON object expected', 500);
+        }
+
+        return $data;
     }
 
     public static function countGsmCharacters(string $text): int
     {
         // Normalisation des fins de ligne
-        $text = preg_replace("/\r\n?/", "\n", $text);
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
 
         // Tableau de remplacements
         $replacement = Sms::REMPLACEMENTS_CARACTERES;
