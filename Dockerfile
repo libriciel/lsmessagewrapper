@@ -1,30 +1,26 @@
-FROM ubuntu:22.04
+ARG PHP_VERSION=8.3
 
-ARG TIMEZONE=UTC
-RUN ln -snf /usr/share/zoneinfo/$TIMEZONE /etc/localtime && echo $TIMEZONE > /etc/timezone
+FROM hubdocker.libriciel.fr/php:${PHP_VERSION}-cli
 
-RUN apt update -yqq \
-    && apt dist-upgrade -yqq \
-    && apt install \
-        wget \
-        sudo \
-        vim \
-        curl \
-        git \
-        locales \
-        -yqq
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git unzip \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt install php-fpm php-intl php-mbstring php-xml php-zip php-curl -y
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
+ENV XDEBUG_MODE=coverage
 
-COPY --chown=www-data:www-data . /app
+COPY --from=hubdocker.libriciel.fr/composer:2 /usr/bin/composer /usr/bin/composer
 
+ARG UID=1000
+ARG GID=1000
+RUN groupadd --gid ${GID} app \
+    && useradd --uid ${UID} --gid ${GID} --create-home app \
+    && mkdir /app \
+    && chown app:app /app
+
+USER app
 WORKDIR /app
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-ENV XDEBUG_MODE='coverage'
-
-RUN composer install
-
-
-RUN apt -y install php-xdebug
+COPY --chown=app:app . /app
+RUN composer install --no-interaction --prefer-dist

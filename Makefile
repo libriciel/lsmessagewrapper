@@ -1,25 +1,28 @@
-DOCKER_COMPOSE=docker compose -f docker-compose.yml
+DOCKER_COMPOSE = docker compose
+RUN = $(DOCKER_COMPOSE) run --rm php
+
+.PHONY: build shell composer-install composer-update test ecs ecs-fix phpstan
 
 build:
-	$(DOCKER_COMPOSE) build
+	$(DOCKER_COMPOSE) build --build-arg UID=$$(id -u) --build-arg GID=$$(id -g)
 
-up-log:
-	$(DOCKER_COMPOSE) up -V
-
-up:
-	$(DOCKER_COMPOSE) up -d
-
-down:
-	$(DOCKER_COMPOSE) down -v
-
-logs:
-	$(DOCKER_COMPOSE) logs -f
-
-ps:
-	$(DOCKER_COMPOSE) ps
+shell:
+	$(RUN) bash
 
 composer-install:
-	$(DOCKER_COMPOSE) run --entrypoint="composer install" fpm-lsmessage-wrapper
+	$(RUN) composer install
 
 composer-update:
-	$(DOCKER_COMPOSE) run --entrypoint="composer update" fpm-lsmessage-wrapper
+	$(RUN) composer update
+
+test:
+	$(RUN) vendor/bin/phpunit
+
+ecs:
+	$(RUN) vendor/bin/ecs
+
+ecs-fix:
+	$(RUN) vendor/bin/ecs --fix
+
+phpstan:
+	$(RUN) vendor/bin/phpstan analyse

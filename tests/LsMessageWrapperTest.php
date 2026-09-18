@@ -1,5 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
+namespace Libriciel\LsMessageWrapper\Test;
+
 use Libriciel\LsMessageWrapper\LsMessageException;
 use Libriciel\LsMessageWrapper\LsMessageWrapper;
 use Libriciel\LsMessageWrapper\Sms;
@@ -11,11 +15,11 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
-class LsMessageWrapperTest extends TestCase
+final class LsMessageWrapperTest extends TestCase
 {
-    private function mockResponse(int $statusCode, ?string $reasonPhrase = "", ?StreamInterface $body = null): ResponseInterface
+    private function mockResponse(int $statusCode, ?string $reasonPhrase = '', ?StreamInterface $body = null): ResponseInterface
     {
-        $response = $this->createMock(ResponseInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
         $response->method('getStatusCode')->willReturn($statusCode);
         $response->method('getReasonPhrase')->willReturn($reasonPhrase);
         $response->method('getBody')->willReturn($body);
@@ -25,7 +29,7 @@ class LsMessageWrapperTest extends TestCase
 
     private function mockBody(string $json): StreamInterface
     {
-        $stream = $this->createMock(StreamInterface::class);
+        $stream = $this->createStub(StreamInterface::class);
         $stream->method('getContents')->willReturn($json);
 
         return $stream;
@@ -33,20 +37,22 @@ class LsMessageWrapperTest extends TestCase
 
     private function mockRequestFactory(): RequestFactoryInterface
     {
-        $request = $this->createMock(RequestInterface::class);
-        $request->method('withHeader')->will($this->returnSelf());
+        $request = $this->createStub(RequestInterface::class);
+        $request->method('withHeader')->willReturnSelf();
 
-        $request->method('getBody')->willReturn($this->createMock(StreamInterface::class));
+        $request->method('getBody')->willReturn($this->createStub(StreamInterface::class));
 
-        $factory = $this->createMock(RequestFactoryInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
         $factory->method('createRequest')->willReturn($request);
 
         return $factory;
     }
 
-    private function mockClient(?ResponseInterface $response, Exception $exception = null): ClientInterface
-    {
-        $client = $this->createMock(ClientInterface::class);
+    private function mockClient(
+        ?ResponseInterface $response,
+        ?ClientExceptionInterface $exception = null,
+    ): ClientInterface {
+        $client = $this->createStub(ClientInterface::class);
         if (!$exception) {
             $client->method('sendRequest')->willReturn($response);
         } else {
@@ -58,62 +64,116 @@ class LsMessageWrapperTest extends TestCase
 
     public function testSetUrl(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $factory = $this->createMock(RequestFactoryInterface::class);
+        $this->expectNotToPerformAssertions();
+
+        $client = $this->createStub(ClientInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
-        $msgWrapper->setUrl("http://testurl.fr");
+        $msgWrapper->setUrl('https://testurl.fr');
+    }
 
-        $this->assertTrue(true);
+    public function testSetUrlRemovesTrailingSlash(): void
+    {
+        $request = $this->createStub(RequestInterface::class);
+        $request->method('withHeader')->willReturnSelf();
+
+        $factory = $this->createMock(RequestFactoryInterface::class);
+        $factory->expects($this->once())
+            ->method('createRequest')
+            ->with('GET', 'https://test.libriciel.fr/api/v1/info')
+            ->willReturn($request);
+
+        $response = $this->mockResponse(200, '', $this->mockBody('{"success":true}'));
+        $msgWrapper = new LsMessageWrapper($this->mockClient($response), $factory);
+        $msgWrapper->setUrl('https://test.libriciel.fr/');
+        $msgWrapper->setApiKey('aqaqzszcdcdcdc');
+
+        $msgWrapper->info();
     }
 
     public function testSetUrlMalformed(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $factory = $this->createMock(RequestFactoryInterface::class);
+        $client = $this->createStub(ClientInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
 
         $this->expectException(LsMessageException::class);
-        $this->expectExceptionMessage("malformed url : missing http|https");
+        $this->expectExceptionMessage('malformed url : https required');
         $this->expectExceptionCode(400);
         $msgWrapper = new LsMessageWrapper($client, $factory);
-        $msgWrapper->setUrl("testurl.fr");
+        $msgWrapper->setUrl('testurl.fr');
+    }
 
-        $this->assertTrue(true);
+    public function testSetUrlHttpRefused(): void
+    {
+        $client = $this->createStub(ClientInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
+
+        $this->expectException(LsMessageException::class);
+        $this->expectExceptionMessage('malformed url : https required');
+        $this->expectExceptionCode(400);
+
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+        $msgWrapper->setUrl('http://testurl.fr');
     }
 
     public function testSetApiKey(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $factory = $this->createMock(RequestFactoryInterface::class);
+        $this->expectNotToPerformAssertions();
+
+        $client = $this->createStub(ClientInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
-        $msgWrapper->setApiKey("myapiKey");
-
-        $this->assertTrue(true);
+        $msgWrapper->setApiKey('myapiKey');
     }
 
     public function testSetApiKeyMalformed(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $factory = $this->createMock(RequestFactoryInterface::class);
+        $client = $this->createStub(ClientInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
 
         $this->expectException(LsMessageException::class);
-        $this->expectExceptionMessage("malformed apiKey : no whitespace allowed");
+        $this->expectExceptionMessage('malformed apiKey : no whitespace allowed');
         $this->expectExceptionCode(400);
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
-        $msgWrapper->setApiKey("my apiKey");
+        $msgWrapper->setApiKey('my apiKey');
+    }
 
-        $this->assertTrue(true);
+    public function testSetUrlWithTrailingNewline(): void
+    {
+        $client = $this->createStub(ClientInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
+
+        $this->expectException(LsMessageException::class);
+        $this->expectExceptionMessage('malformed url : https required');
+        $this->expectExceptionCode(400);
+
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+        $msgWrapper->setUrl("https://testurl.fr\n");
+    }
+
+    public function testSetApiKeyWithTrailingNewline(): void
+    {
+        $client = $this->createStub(ClientInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
+
+        $this->expectException(LsMessageException::class);
+        $this->expectExceptionMessage('malformed apiKey : no whitespace allowed');
+        $this->expectExceptionCode(400);
+
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+        $msgWrapper->setApiKey("myapiKey\n");
     }
 
     public function testInfoMissingUrl(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $factory = $this->createMock(RequestFactoryInterface::class);
+        $client = $this->createStub(ClientInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
 
         $this->expectException(LsMessageException::class);
-        $this->expectExceptionMessage("url must be set");
+        $this->expectExceptionMessage('url must be set');
         $this->expectExceptionCode(400);
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
@@ -124,11 +184,11 @@ class LsMessageWrapperTest extends TestCase
 
     public function testInfoMissingApiKey(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $factory = $this->createMock(RequestFactoryInterface::class);
+        $client = $this->createStub(ClientInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
 
         $this->expectException(LsMessageException::class);
-        $this->expectExceptionMessage("apiKey must be set");
+        $this->expectExceptionMessage('apiKey must be set');
         $this->expectExceptionCode(400);
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
@@ -139,11 +199,11 @@ class LsMessageWrapperTest extends TestCase
 
     public function testInfoMissingUrlAndApiKey(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $factory = $this->createMock(RequestFactoryInterface::class);
+        $client = $this->createStub(ClientInterface::class);
+        $factory = $this->createStub(RequestFactoryInterface::class);
 
         $this->expectException(LsMessageException::class);
-        $this->expectExceptionMessage("url and apiKey must be set");
+        $this->expectExceptionMessage('url and apiKey must be set');
         $this->expectExceptionCode(400);
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
@@ -155,7 +215,7 @@ class LsMessageWrapperTest extends TestCase
     {
         $factory = $this->mockRequestFactory();
 
-        $response = $this->mockResponse(401, 'bad apKey', $this->mockBody("bad apKey"));
+        $response = $this->mockResponse(401, 'bad apKey', $this->mockBody('bad apKey'));
         $client = $this->mockClient($response);
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
@@ -163,7 +223,7 @@ class LsMessageWrapperTest extends TestCase
         $msgWrapper->setApiKey('aqaqzszcdcdcdc');
 
         $this->expectException(LsMessageException::class);
-        $this->expectExceptionMessage("bad apKey");
+        $this->expectExceptionMessage('bad apKey');
         $this->expectExceptionCode(401);
 
         $msgWrapper->info();
@@ -180,12 +240,12 @@ class LsMessageWrapperTest extends TestCase
         $msgWrapper->setApiKey('aqaqzszcdcdcdc');
 
         $content = $msgWrapper->info();
-        $this->assertSame(["success" => true], $content);
+        $this->assertSame(['success' => true], $content);
     }
 
     public function testInfoClientException(): void
     {
-        $clientException = $this->createMock(ClientExceptionInterface::class);
+        $clientException = $this->createStub(ClientExceptionInterface::class);
         $client = $this->mockClient(null, $clientException);
 
         $factory = $this->mockRequestFactory();
@@ -199,33 +259,86 @@ class LsMessageWrapperTest extends TestCase
         $msgWrapper->info();
     }
 
+    public function testInfoInvalidJsonResponse(): void
+    {
+        $response = $this->mockResponse(200, '', $this->mockBody('not json'));
+        $client = $this->mockClient($response);
+        $factory = $this->mockRequestFactory();
+
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+        $msgWrapper->setUrl('https://test.libriciel.fr');
+        $msgWrapper->setApiKey('aqaqzszcdcdcdc');
+
+        $this->expectException(LsMessageException::class);
+        $this->expectExceptionMessage('invalid response : Syntax error');
+        $this->expectExceptionCode(500);
+
+        $msgWrapper->info();
+    }
+
+    public function testInfoNonArrayJsonResponse(): void
+    {
+        $response = $this->mockResponse(200, '', $this->mockBody('"ok"'));
+        $client = $this->mockClient($response);
+        $factory = $this->mockRequestFactory();
+
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+        $msgWrapper->setUrl('https://test.libriciel.fr');
+        $msgWrapper->setApiKey('aqaqzszcdcdcdc');
+
+        $this->expectException(LsMessageException::class);
+        $this->expectExceptionMessage('invalid response : JSON object expected');
+        $this->expectExceptionCode(500);
+
+        $msgWrapper->info();
+    }
+
+    public function testSendOneInvalidUtf8Content(): void
+    {
+        $response = $this->mockResponse(200, '', $this->mockBody('{"success":true}'));
+        $client = $this->mockClient($response);
+        $factory = $this->mockRequestFactory();
+
+        $sms = new Sms('name', '0602030405', "contenu \xB1 invalide", 'sender');
+
+        $msgWrapper = new LsMessageWrapper($client, $factory);
+        $msgWrapper->setUrl('https://test.libriciel.fr');
+        $msgWrapper->setApiKey('aqaqzszcdcdcdc');
+
+        $this->expectException(LsMessageException::class);
+        $this->expectExceptionMessage('unable to encode request body : Malformed UTF-8 characters, possibly incorrectly encoded');
+        $this->expectExceptionCode(400);
+
+        $msgWrapper->sendOne($sms);
+    }
+
     public function testSendOne(): void
     {
         $response = $this->mockResponse(200, '', $this->mockBody('{"success":true}'));
         $client = $this->mockClient($response);
         $factory = $this->mockRequestFactory();
 
-        $sms = $this->createMock(Sms::class);
+        $sms = new Sms('name', '0602030405', 'content', 'sender');
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
 
-        $msgWrapper->setApiKey("123");
-        $msgWrapper->setUrl("https://123.com");
+        $msgWrapper->setApiKey('123');
+        $msgWrapper->setUrl('https://123.com');
 
         $content = $msgWrapper->sendOne($sms);
-        $this->assertSame(["success" => true], $content);
+        $this->assertSame(['success' => true], $content);
     }
 
     public function testSendOneNotEnoughCredit(): void
     {
-        $response = $this->mockResponse(402, 'not enough credit', $this->mockBody("not enough credit"));
+        $response = $this->mockResponse(402, 'not enough credit', $this->mockBody('not enough credit'));
         $client = $this->mockClient($response);
         $factory = $this->mockRequestFactory();
 
-        $sms = $this->createMock(Sms::class);
+        $sms = new Sms('name', '0602030405', 'content', 'sender');
         $msgWrapper = new LsMessageWrapper($client, $factory);
-        $msgWrapper->setApiKey("123");
-        $msgWrapper->setUrl("https://123.com");
+        $msgWrapper->setApiKey('123');
+        $msgWrapper->setUrl('https://123.com');
 
         $this->expectException(LsMessageException::class);
         $this->expectExceptionCode(402);
@@ -235,7 +348,7 @@ class LsMessageWrapperTest extends TestCase
 
     public function testSendOneClientException(): void
     {
-        $clientException = $this->createMock(ClientExceptionInterface::class);
+        $clientException = $this->createStub(ClientExceptionInterface::class);
         $client = $this->mockClient(null, $clientException);
 
         $factory = $this->mockRequestFactory();
@@ -244,7 +357,7 @@ class LsMessageWrapperTest extends TestCase
         $msgWrapper->setUrl('https://test.libriciel.fr');
         $msgWrapper->setApiKey('aqaqcdcdcdc');
 
-        $sms = $this->createMock(Sms::class);
+        $sms = new Sms('name', '0602030405', 'content', 'sender');
 
         $this->expectException(LsMessageException::class);
 
@@ -257,15 +370,15 @@ class LsMessageWrapperTest extends TestCase
         $client = $this->mockClient($response);
         $factory = $this->mockRequestFactory();
 
-        $sms = $this->createMock(Sms::class);
+        $sms = new Sms('name', '0602030405', 'content', 'sender');
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
 
-        $msgWrapper->setApiKey("123");
-        $msgWrapper->setUrl("https://123.com");
+        $msgWrapper->setApiKey('123');
+        $msgWrapper->setUrl('https://123.com');
 
         $content = $msgWrapper->sendMultiple([$sms]);
-        $this->assertSame(["success" => true], $content);
+        $this->assertSame(['success' => true], $content);
     }
 
     public function testSendMultipleEmptyArray(): void
@@ -276,8 +389,8 @@ class LsMessageWrapperTest extends TestCase
 
         $msgWrapper = new LsMessageWrapper($client, $factory);
 
-        $msgWrapper->setApiKey("123");
-        $msgWrapper->setUrl("https://123.com");
+        $msgWrapper->setApiKey('123');
+        $msgWrapper->setUrl('https://123.com');
 
         $this->expectException(LsMessageException::class);
         $this->expectExceptionCode(400);
